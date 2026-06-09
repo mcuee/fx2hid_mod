@@ -186,7 +186,7 @@ ReportDscr:
 	db 35h, 00h	;	Physical minimum (0)
 	db 45h, 0FFh	;	Physical maximum (255)
 	db 75h, 08h	;	Report size (8 bits)
-	db 95h, 80h	;	Report count (128 fields)
+	db 96h, 00h, 04h ;	Report count (1024 fields)
 	db 81h, 02h	;	Input (data, variable, absolute)
 
 ;; The Output report
@@ -197,7 +197,7 @@ ReportDscr:
 	db 35h, 00h	;	Physical minimum (0)
 	db 45h, 0FFh	;	Physical maximum (255)
 	db 75h, 08h	;	Report size (8 bits)
-	db 95h, 80h	;	Report count (128 fields)
+	db 96h, 00h, 04h ;	Report count (1024 fields)
 	db 91h, 02h	;	Output (data, variable, absolute)
 
 	db 0C0h         ;       End Collection (Physical)

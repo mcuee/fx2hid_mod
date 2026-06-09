@@ -66,8 +66,9 @@ BYTE oldbuttons;
 BYTE leds = 0xFF;
 
 BYTE out_packet_count = 0;
+BYTE tx_packet_count = 0;
 BYTE tx_state = 0;
-BYTE xdata temp_buf1[64];
+BYTE xdata temp_buf[1024];
 
 BYTE read_buttons (void);
 void write_leds (BYTE d);
@@ -229,21 +230,29 @@ void TD_Poll(void)              // Called repeatedly while the device is idle
 
 // usbhidio code start
 
-		if (out_packet_count == 0)
+		if (out_packet_count < 15)
 		{
 			BYTE i;
+			BYTE xdata *p = &temp_buf[(WORD)out_packet_count * 64];
 			for (i = 0; i < 64; i++)
 			{
-				temp_buf1[i] = EP1OUTBUF[i];
+				*p++ = EP1OUTBUF[i];
 			}
-			out_packet_count = 1;
-			EP1OUTBC = 0; // Rearm EP1OUT to receive the second packet
+			out_packet_count++;
+			EP1OUTBC = 0; // Rearm EP1OUT to receive the next packet
 		}
-		else if (out_packet_count == 1)
+		else if (out_packet_count == 15)
 		{
-			out_packet_count = 2;
+			BYTE i;
+			BYTE xdata *p = &temp_buf[15 * 64];
+			for (i = 0; i < 64; i++)
+			{
+				*p++ = EP1OUTBUF[i];
+			}
+			out_packet_count = 16;
+			tx_packet_count = 0;
 			tx_state = 1;
-			// Note: we do NOT rearm EP1OUT here yet. We hold the second packet in EP1OUTBUF.
+			// Note: we do NOT rearm EP1OUT here yet. We hold the buffer.
 		}
 
 // usbhidiocode end
@@ -256,29 +265,21 @@ void TD_Poll(void)              // Called repeatedly while the device is idle
 		if (!(EP1INCS & 0x02)) // Is EP1IN free?
 		{
 			BYTE i;
+			BYTE xdata *p = &temp_buf[(WORD)tx_packet_count * 64];
 			for (i = 0; i < 64; i++)
 			{
-				EP1INBUF[i] = temp_buf1[i];
+				EP1INBUF[i] = *p++;
 			}
 			EP1INBC = 64; // Arm EP1IN with 64 bytes
-			tx_state = 2;
-		}
-	}
-	else if (tx_state == 2)
-	{
-		if (!(EP1INCS & 0x02)) // Is EP1IN free again?
-		{
-			BYTE i;
-			for (i = 0; i < 64; i++)
-			{
-				EP1INBUF[i] = EP1OUTBUF[i];
-			}
-			EP1INBC = 64; // Arm EP1IN with 64 bytes
+			tx_packet_count++;
 			
-			// Done transmitting the 128-byte report, reset state and rearm EP1OUT
-			out_packet_count = 0;
-			tx_state = 0;
-			EP1OUTBC = 0; // Rearm EP1OUT to accept the next report
+			if (tx_packet_count == 16)
+			{
+				// Done transmitting the 1024-byte report, reset state and rearm EP1OUT
+				out_packet_count = 0;
+				tx_state = 0;
+				EP1OUTBC = 0; // Rearm EP1OUT to accept the next report
+			}
 		}
 	} 
 }
