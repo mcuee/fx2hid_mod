@@ -1,0 +1,3 @@
+C:/work/ai-coding/sdcc/fx2hid_agy/build/CMakeFiles/test_host.dir
+C:/work/ai-coding/sdcc/fx2hid_agy/build/CMakeFiles/edit_cache.dir
+C:/work/ai-coding/sdcc/fx2hid_agy/build/CMakeFiles/rebuild_cache.dir
