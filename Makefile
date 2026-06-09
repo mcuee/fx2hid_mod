@@ -1,45 +1,44 @@
 # ==============================================================================
 # Makefile for test_host.c
 #
-# Works on Windows (MinGW/MSYS2), Linux, and macOS.
-# Requires the HIDAPI library to be installed.
+# Uses pkg-config to set the compile and linking flags automatically
+# across Windows (MSYS2/MinGW), Linux, and macOS.
 # ==============================================================================
 
-CC = gcc
+CC ?= gcc
 CFLAGS = -Wall -Wextra -O2
 TARGET = test_host
 
-# OS Detection
+# Determine correct package name dynamically
+PKG_NAME := $(shell for pkg in hidapi hidapi-hidraw hidapi-libusb; do \
+		pkg-config --exists $$pkg && echo $$pkg && break; \
+	done)
+
+# If no package is found by pkg-config, default to 'hidapi'
+ifeq ($(PKG_NAME),)
+    PKG_NAME := hidapi
+endif
+
+# Append compile and linking flags from pkg-config
+CFLAGS += $(shell pkg-config --cflags $(PKG_NAME) 2>/dev/null)
+LIBS = $(shell pkg-config --libs $(PKG_NAME) 2>/dev/null)
+
+# Fallback linking if pkg-config failed to return any libraries
+ifeq ($(strip $(LIBS)),)
+    ifeq ($(OS),Windows_NT)
+        LIBS = -lhidapi -lsetupapi
+    else
+        LIBS = -lhidapi
+    endif
+endif
+
+# OS specific executable extension and clean commands
 ifeq ($(OS),Windows_NT)
-    # Windows settings (MinGW/MSYS2)
-    # setupapi is required on Windows for HIDAPI
-    LIBS = -lhidapi -lsetupapi
     EXE = .exe
     RM = del /F /Q
 else
-    # Linux and macOS settings
     EXE =
     RM = rm -f
-    UNAME_S := $(shell uname -s)
-    
-    # Try using pkg-config to find hidapi if available, otherwise fallback
-    PKG_OK := $(shell pkg-config --exists hidapi-hidraw && echo yes || (pkg-config --exists hidapi-libusb && echo yes || echo no))
-    ifeq ($(PKG_OK),yes)
-        # Use pkg-config to get cflags and libs
-        # Prefers hidapi-hidraw on Linux, falls back to libusb if needed
-        PKG_CONFIG_NAME = $(shell pkg-config --exists hidapi-hidraw && echo hidapi-hidraw || echo hidapi-libusb)
-        CFLAGS += $(shell pkg-config --cflags $(PKG_CONFIG_NAME))
-        LIBS = $(shell pkg-config --libs $(PKG_CONFIG_NAME))
-    else
-        # Fallback linking directly against hidapi
-        LIBS = -lhidapi
-        
-        # Homebrew paths for macOS (Apple Silicon fallback)
-        ifeq ($(UNAME_S),Darwin)
-            CFLAGS += -I/opt/homebrew/include
-            LIBS += -L/opt/homebrew/lib
-        endif
-    endif
 endif
 
 # Default Target
@@ -53,3 +52,4 @@ clean:
 	$(RM) $(TARGET)$(EXE)
 
 .PHONY: all clean
+
