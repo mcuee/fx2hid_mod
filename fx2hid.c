@@ -226,18 +226,17 @@ void TD_Poll(void)              // Called repeatedly while the device is idle
 // usbhidio code start
 
 // Copy bytes received on the OUT endpoint to the IN endpoint. 
-		EP1INBUF[0] = EP1OUTBUF[0];
-		EP1INBUF[1] = EP1OUTBUF[1];
-		EP1INBUF[2] = EP1OUTBUF[2];
-		EP1INBUF[3] = EP1OUTBUF[3];
-		EP1INBUF[4] = EP1OUTBUF[4];
-		EP1INBUF[5] = EP1OUTBUF[5];
-		EP1INBUF[6] = EP1OUTBUF[6];
-		EP1INBUF[7] = EP1OUTBUF[7];
+		{
+			BYTE i;
+			for (i = 0; i < 64; i++)
+			{
+				EP1INBUF[i] = EP1OUTBUF[i];
+			}
+		}
 
 // Rearm the IN endpoint buffer to enable sending a report.
 // The value equals the report size.
-		EP1INBC = 8;			
+		EP1INBC = 64;			
 
 // usbhidiocode end
 
