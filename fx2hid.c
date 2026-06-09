@@ -65,6 +65,10 @@ BYTE buttons;
 BYTE oldbuttons;
 BYTE leds = 0xFF;
 
+BYTE out_packet_count = 0;
+BYTE tx_state = 0;
+BYTE xdata temp_buf1[64];
+
 BYTE read_buttons (void);
 void write_leds (BYTE d);
 
@@ -225,23 +229,57 @@ void TD_Poll(void)              // Called repeatedly while the device is idle
 
 // usbhidio code start
 
-// Copy bytes received on the OUT endpoint to the IN endpoint. 
+		if (out_packet_count == 0)
+		{
+			BYTE i;
+			for (i = 0; i < 64; i++)
+			{
+				temp_buf1[i] = EP1OUTBUF[i];
+			}
+			out_packet_count = 1;
+			EP1OUTBC = 0; // Rearm EP1OUT to receive the second packet
+		}
+		else if (out_packet_count == 1)
+		{
+			out_packet_count = 2;
+			tx_state = 1;
+			// Note: we do NOT rearm EP1OUT here yet. We hold the second packet in EP1OUTBUF.
+		}
+
+// usbhidiocode end
+
+	}
+
+	// Transmit logic for split packets:
+	if (tx_state == 1)
+	{
+		if (!(EP1INCS & 0x02)) // Is EP1IN free?
+		{
+			BYTE i;
+			for (i = 0; i < 64; i++)
+			{
+				EP1INBUF[i] = temp_buf1[i];
+			}
+			EP1INBC = 64; // Arm EP1IN with 64 bytes
+			tx_state = 2;
+		}
+	}
+	else if (tx_state == 2)
+	{
+		if (!(EP1INCS & 0x02)) // Is EP1IN free again?
 		{
 			BYTE i;
 			for (i = 0; i < 64; i++)
 			{
 				EP1INBUF[i] = EP1OUTBUF[i];
 			}
+			EP1INBC = 64; // Arm EP1IN with 64 bytes
+			
+			// Done transmitting the 128-byte report, reset state and rearm EP1OUT
+			out_packet_count = 0;
+			tx_state = 0;
+			EP1OUTBC = 0; // Rearm EP1OUT to accept the next report
 		}
-
-// Rearm the IN endpoint buffer to enable sending a report.
-// The value equals the report size.
-		EP1INBC = 64;			
-
-// usbhidiocode end
-
-		EP1OUTBC = 0;				//Rearm the OUT endpoint buffer to enable receiving a report.
-
 	} 
 }
 
