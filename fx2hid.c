@@ -229,7 +229,7 @@ void TD_Poll(void)              // Called repeatedly while the device is idle
 */
 
 // usbhidio code start
-
+ 
 		if (out_packet_count < 15)
 		{
 			BYTE i;
@@ -237,6 +237,10 @@ void TD_Poll(void)              // Called repeatedly while the device is idle
 			for (i = 0; i < 64; i++)
 			{
 				*p++ = EP1OUTBUF[i];
+			}
+			if (out_packet_count == 0)
+			{
+				temp_buf[0] = 1; // Replace OUT Report ID (2) with IN Report ID (1)
 			}
 			out_packet_count++;
 			EP1OUTBC = 0; // Rearm EP1OUT to receive the next packet

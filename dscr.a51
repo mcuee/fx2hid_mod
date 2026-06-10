@@ -179,6 +179,7 @@ ReportDscr:
 	db 06h, 0A1h, 0FFh ;    Usage Page (vendor defined)
 
 ;; The Input report
+	db 85h, 01h     ;       Report ID (1)
 	db 09h, 03h     ;       Usage (vendor defined)
 	db 09h, 04h     ;       Usage (vendor defined)
 	db 15h, 80h	;	Logical minimum (80h or -128)
@@ -186,10 +187,11 @@ ReportDscr:
 	db 35h, 00h	;	Physical minimum (0)
 	db 45h, 0FFh	;	Physical maximum (255)
 	db 75h, 08h	;	Report size (8 bits)
-	db 96h, 00h, 04h ;	Report count (1024 fields)
+	db 96h, 0FFh, 03h ;	Report count (1023 fields)
 	db 81h, 02h	;	Input (data, variable, absolute)
 
 ;; The Output report
+	db 85h, 02h     ;       Report ID (2)
 	db 09h, 05h     ;       Usage (vendor defined)
 	db 09h, 06h     ;       Usage (vendor defined)
 	db 15h, 80h	;	Logical minimum (80h or -128)
@@ -197,7 +199,7 @@ ReportDscr:
 	db 35h, 00h	;	Physical minimum (0)
 	db 45h, 0FFh	;	Physical maximum (255)
 	db 75h, 08h	;	Report size (8 bits)
-	db 96h, 00h, 04h ;	Report count (1024 fields)
+	db 96h, 0FFh, 03h ;	Report count (1023 fields)
 	db 91h, 02h	;	Output (data, variable, absolute)
 
 	db 0C0h         ;       End Collection (Physical)

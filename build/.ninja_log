@@ -1,5 +1,0 @@
-# ninja log v7
-5	157	8027514112869928	CMakeFiles/test_host.dir/test_host.c.obj	dd3727caec610669
-160	385	8027514114419414	test_host.exe	e1714a043cfadca0
-16	2219	8027524071640423	CMakeFiles/test_host.dir/test_host.c.obj	dd3727caec610669
-2220	3366	8027524093683816	test_host.exe	e1714a043cfadca0
